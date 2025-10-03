@@ -46,6 +46,7 @@
     let bgColor = localStorage.getItem("bgColor") || "#222";
 
     const colors = [
+      {name:"Default", code:"#222"},
       {name:"Red", code:"#FF0000"},
       {name:"Orange", code:"#FF7F00"},
       {name:"Yellow", code:"#FFFF00"},
@@ -55,7 +56,7 @@
       {name:"Violet", code:"#8F00FF"}
     ];
 
-    function priceForIndex(i){ return 50 + i*50; } // progressively more expensive
+    function priceForIndex(i){ return i===0 ? 0 : 50 + (i-1)*50; }
 
     function updateDisplay(){
       document.getElementById("balance").innerText=balance;
@@ -73,6 +74,9 @@
         div.className="color-option";
         div.style.background=c.code;
         let price=priceForIndex(i);
+
+        if(!ownedColors.includes(c.code) && price===0) ownedColors.push(c.code);
+
         if(ownedColors.includes(c.code)){
           let btn=document.createElement("button");
           btn.innerText=(bgColor===c.code)?"Selected":"Select";
