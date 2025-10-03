@@ -1,4 +1,3 @@
-//game by glenn
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -64,6 +63,15 @@
       display: none;
     }
     .confirm-box button { margin: 5px; }
+    .bet-input { margin-top: 10px; }
+    .bet-input input {
+      width: 80px;
+      text-align: center;
+      font-size: 16px;
+      padding: 5px;
+      border-radius: 5px;
+      border: none;
+    }
   </style>
 </head>
 <body>
@@ -78,6 +86,12 @@
   </div>
 
   <button onclick="spin()">Spin</button>
+
+  <!-- new bet input -->
+  <div class="bet-input">
+    <input type="number" id="betInput" min="1" placeholder="Bet amount">
+    <button onclick="setBet()">Set Bet</button>
+  </div>
 
   <div class="bet-buttons">
     <button onclick="betAllIn()">All In</button>
@@ -118,7 +132,6 @@
       balance -= bet;
       updateDisplay();
 
-      // animation effect
       const reels = [document.getElementById("reel1"),
                      document.getElementById("reel2"),
                      document.getElementById("reel3")];
@@ -149,7 +162,7 @@
         balance += payout;
         document.getElementById("result").innerText=resultText;
         updateDisplay();
-      }, 300); // match animation duration
+      }, 300);
     }
 
     // bet functions
@@ -157,6 +170,19 @@
     function betDouble(){ if(balance >= bet*2){ bet*=2; updateDisplay(); } }
     function betHalf(){ bet=Math.max(1, Math.floor(balance/2)); updateDisplay(); }
     function betTenPercent(){ bet=Math.max(1, Math.floor(balance*0.1)); updateDisplay(); }
+
+    // new bet setter
+    function setBet(){
+      const input=document.getElementById("betInput").value;
+      const amount=parseInt(input);
+      if(!isNaN(amount) && amount>0 && amount<=balance){
+        bet=amount;
+        updateDisplay();
+        document.getElementById("result").innerText="Bet set to $"+bet;
+      } else {
+        document.getElementById("result").innerText="Invalid bet!";
+      }
+    }
 
     function goStore(){ window.location.href="store.html"; }
 
