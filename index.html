@@ -32,6 +32,7 @@
       font-size: 40px;
       background: #111;
       border-radius: 8px;
+      transition: transform 0.3s ease;
     }
     button {
       margin: 5px;
@@ -100,7 +101,6 @@
     let balance = parseInt(localStorage.getItem("balance")) || 100;
     let bet = 10;
 
-    // load bg color
     document.body.style.setProperty("--bg", localStorage.getItem("bgColor") || "#222");
 
     function updateDisplay(){
@@ -115,27 +115,47 @@
         return;
       }
       balance -= bet;
-      const r1 = symbols[Math.floor(Math.random()*symbols.length)];
-      const r2 = symbols[Math.floor(Math.random()*symbols.length)];
-      const r3 = symbols[Math.floor(Math.random()*symbols.length)];
-      document.getElementById("reel1").innerText = r1;
-      document.getElementById("reel2").innerText = r2;
-      document.getElementById("reel3").innerText = r3;
-      if(r1===r2 && r2===r3){
-        let win = bet * 5;
-        balance += win;
-        document.getElementById("result").innerText = "🎉 You win $" + win + "!";
-      } else {
-        document.getElementById("result").innerText = "😢 You lost $" + bet;
-      }
       updateDisplay();
+
+      // animation effect
+      const reels = [document.getElementById("reel1"),
+                     document.getElementById("reel2"),
+                     document.getElementById("reel3")];
+      reels.forEach(r => r.style.transform="rotateX(360deg)");
+      setTimeout(() => {
+        reels.forEach(r => r.style.transform="rotateX(0deg)");
+
+        const r1 = symbols[Math.floor(Math.random()*symbols.length)];
+        const r2 = symbols[Math.floor(Math.random()*symbols.length)];
+        const r3 = symbols[Math.floor(Math.random()*symbols.length)];
+
+        document.getElementById("reel1").innerText = r1;
+        document.getElementById("reel2").innerText = r2;
+        document.getElementById("reel3").innerText = r3;
+
+        let resultText="";
+        let payout=0;
+
+        if(r1===r2 && r2===r3){
+          payout = bet*100;
+          resultText=`🎉 3/3 match! You win $${payout}!`;
+        } else if(r1===r2 || r2===r3 || r1===r3){
+          payout = Math.floor(bet*2.5);
+          resultText=`✨ 2/3 match! You win $${payout}!`;
+        } else {
+          resultText=`😢 You lost $${bet}`;
+        }
+        balance += payout;
+        document.getElementById("result").innerText=resultText;
+        updateDisplay();
+      }, 300); // match animation duration
     }
 
     // bet functions
-    function betAllIn(){ if(balance>0){ bet = balance; updateDisplay(); } }
-    function betDouble(){ if(balance >= bet*2){ bet *= 2; updateDisplay(); } }
-    function betHalf(){ bet = Math.max(1, Math.floor(balance/2)); updateDisplay(); }
-    function betTenPercent(){ bet = Math.max(1, Math.floor(balance*0.1)); updateDisplay(); }
+    function betAllIn(){ if(balance>0){ bet=balance; updateDisplay(); } }
+    function betDouble(){ if(balance >= bet*2){ bet*=2; updateDisplay(); } }
+    function betHalf(){ bet=Math.max(1, Math.floor(balance/2)); updateDisplay(); }
+    function betTenPercent(){ bet=Math.max(1, Math.floor(balance*0.1)); updateDisplay(); }
 
     function goStore(){ window.location.href="store.html"; }
 
