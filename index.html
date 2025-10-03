@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Slots Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: var(--bg, #222);
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 { margin: 10px; }
+    .slot-machine {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      background: rgba(0,0,0,0.4);
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px auto;
+      width: max-content;
+    }
+    .reel {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 40px;
+      background: #111;
+      border-radius: 8px;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #ff9800;
+      color: #fff;
+    }
+    button:hover { background: #e68900; }
+    .bet-buttons { margin-top: 10px; }
+    .result { margin-top: 15px; font-size: 20px; font-weight: bold; }
+    #resetBtn {
+      position: fixed;
+      bottom: 15px;
+      left: 15px;
+      background: red;
+    }
+    .confirm-box {
+      position: fixed;
+      bottom: 60px;
+      left: 15px;
+      background: #333;
+      padding: 10px;
+      border-radius: 8px;
+      display: none;
+    }
+    .confirm-box button { margin: 5px; }
+  </style>
+</head>
+<body>
+  <h1>🎰 Slot Machine 🎰</h1>
+  <p>Balance: $<span id="balance">0</span></p>
+  <p>Current Bet: $<span id="bet">10</span></p>
+
+  <div class="slot-machine">
+    <div class="reel" id="reel1">❓</div>
+    <div class="reel" id="reel2">❓</div>
+    <div class="reel" id="reel3">❓</div>
+  </div>
+
+  <button onclick="spin()">Spin</button>
+
+  <div class="bet-buttons">
+    <button onclick="betAllIn()">All In</button>
+    <button onclick="betDouble()">2x</button>
+    <button onclick="betHalf()">Half</button>
+    <button onclick="betTenPercent()">10%</button>
+  </div>
+
+  <div class="result" id="result"></div>
+
+  <button onclick="goStore()">Go to Store 🛒</button>
+
+  <button id="resetBtn" onclick="showConfirm()">Reset Balance</button>
+  <div class="confirm-box" id="confirmBox">
+    <p>Reset balance to $100?</p>
+    <button onclick="resetBalance(true)">Yes</button>
+    <button onclick="resetBalance(false)">No</button>
+  </div>
+
+  <script>
+    const symbols = ["🍒","🍋","🍇","🍉","⭐","7️⃣"];
+    let balance = parseInt(localStorage.getItem("balance")) || 100;
+    let bet = 10;
+
+    // load bg color
+    document.body.style.setProperty("--bg", localStorage.getItem("bgColor") || "#222");
+
+    function updateDisplay(){
+      document.getElementById("balance").innerText = balance;
+      document.getElementById("bet").innerText = bet;
+      localStorage.setItem("balance", balance);
+    }
+
+    function spin(){
+      if(balance < bet){
+        document.getElementById("result").innerText = "Not enough balance!";
+        return;
+      }
+      balance -= bet;
+      const r1 = symbols[Math.floor(Math.random()*symbols.length)];
+      const r2 = symbols[Math.floor(Math.random()*symbols.length)];
+      const r3 = symbols[Math.floor(Math.random()*symbols.length)];
+      document.getElementById("reel1").innerText = r1;
+      document.getElementById("reel2").innerText = r2;
+      document.getElementById("reel3").innerText = r3;
+      if(r1===r2 && r2===r3){
+        let win = bet * 5;
+        balance += win;
+        document.getElementById("result").innerText = "🎉 You win $" + win + "!";
+      } else {
+        document.getElementById("result").innerText = "😢 You lost $" + bet;
+      }
+      updateDisplay();
+    }
+
+    // bet functions
+    function betAllIn(){ if(balance>0){ bet = balance; updateDisplay(); } }
+    function betDouble(){ if(balance >= bet*2){ bet *= 2; updateDisplay(); } }
+    function betHalf(){ bet = Math.max(1, Math.floor(balance/2)); updateDisplay(); }
+    function betTenPercent(){ bet = Math.max(1, Math.floor(balance*0.1)); updateDisplay(); }
+
+    function goStore(){ window.location.href="store.html"; }
+
+    function showConfirm(){ document.getElementById("confirmBox").style.display="block"; }
+    function resetBalance(confirm){
+      document.getElementById("confirmBox").style.display="none";
+      if(confirm){
+        balance=100; bet=10;
+        updateDisplay();
+        document.getElementById("result").innerText="Balance reset!";
+      }
+    }
+
+    updateDisplay();
+  </script>
+</body>
+</html>
