@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Slots Store</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: var(--bg, #222);
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 { margin: 10px; }
+    .color-option {
+      margin: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #000;
+      font-weight: bold;
+    }
+    button {
+      margin: 10px;
+      padding: 8px 14px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #ff9800;
+      color: #fff;
+    }
+    button:hover { background: #e68900; }
+  </style>
+</head>
+<body>
+  <h1>🛒 Color Store</h1>
+  <p>Balance: $<span id="balance">0</span></p>
+  <div id="store"></div>
+  <button onclick="goBack()">Back to Slots 🎰</button>
+
+  <script>
+    let balance = parseInt(localStorage.getItem("balance")) || 100;
+    let ownedColors = JSON.parse(localStorage.getItem("ownedColors")||"[]");
+    let bgColor = localStorage.getItem("bgColor") || "#222";
+
+    const colors = [
+      {name:"Red", code:"#FF0000"},
+      {name:"Orange", code:"#FF7F00"},
+      {name:"Yellow", code:"#FFFF00"},
+      {name:"Green", code:"#00FF00"},
+      {name:"Blue", code:"#0000FF"},
+      {name:"Indigo", code:"#4B0082"},
+      {name:"Violet", code:"#8F00FF"}
+    ];
+
+    function priceForIndex(i){ return 50 + i*50; } // progressively more expensive
+
+    function updateDisplay(){
+      document.getElementById("balance").innerText=balance;
+      localStorage.setItem("balance",balance);
+      localStorage.setItem("ownedColors",JSON.stringify(ownedColors));
+      localStorage.setItem("bgColor",bgColor);
+      document.body.style.setProperty("--bg", bgColor);
+    }
+
+    function renderStore(){
+      const store = document.getElementById("store");
+      store.innerHTML="";
+      colors.forEach((c,i)=>{
+        const div=document.createElement("div");
+        div.className="color-option";
+        div.style.background=c.code;
+        let price=priceForIndex(i);
+        if(ownedColors.includes(c.code)){
+          let btn=document.createElement("button");
+          btn.innerText=(bgColor===c.code)?"Selected":"Select";
+          btn.onclick=()=>{ bgColor=c.code; updateDisplay(); renderStore(); };
+          div.appendChild(btn);
+        } else {
+          let btn=document.createElement("button");
+          btn.innerText="Buy $" + price;
+          btn.onclick=()=>{
+            if(balance>=price){
+              balance-=price;
+              ownedColors.push(c.code);
+              bgColor=c.code;
+              updateDisplay();
+              renderStore();
+            }
+          };
+          div.appendChild(btn);
+        }
+        store.appendChild(div);
+      });
+    }
+
+    function goBack(){ window.location.href="index.html"; }
+
+    updateDisplay();
+    renderStore();
+  </script>
+</body>
+</html>
