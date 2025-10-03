@@ -6,24 +6,22 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
       background: var(--bg, #222);
       color: #fff;
-      margin: 0;
+      text-align: center;
       padding: 20px;
     }
-    h1 { margin: 10px; }
-    .color-option {
+    .item {
       margin: 10px;
-      padding: 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      color: #000;
-      font-weight: bold;
+      padding: 15px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      display: inline-block;
+      width: 200px;
     }
     button {
-      margin: 10px;
-      padding: 8px 14px;
+      margin-top: 10px;
+      padding: 6px 12px;
       font-size: 14px;
       border: none;
       border-radius: 6px;
@@ -32,78 +30,124 @@
       color: #fff;
     }
     button:hover { background: #e68900; }
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      color: #0af;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
-  <h1>🛒 Color Store</h1>
-  <p>Balance: $<span id="balance">0</span></p>
+  <h1>🎨 Slots Store</h1>
+  <p id="balance"></p>
+
   <div id="store"></div>
-  <button onclick="goBack()">Back to Slots 🎰</button>
+
+  <a href="index.html">⬅ Back to Game</a>
 
   <script>
-    let balance = parseInt(localStorage.getItem("balance")) || 100;
-    let ownedColors = JSON.parse(localStorage.getItem("ownedColors")||"[]");
-    let bgColor = localStorage.getItem("bgColor") || "#222";
+    // Load balance
+    let balance = parseFloat(localStorage.getItem("balance")) || 100;
+    document.getElementById("balance").textContent = "Balance: $" + balance.toFixed(2);
 
+    // Colors with exponential scaling prices
+    const basePrice = 100;
     const colors = [
-      {name:"Default", code:"#222"},
-      {name:"Red", code:"#FF0000"},
-      {name:"Orange", code:"#FF7F00"},
-      {name:"Yellow", code:"#FFFF00"},
-      {name:"Green", code:"#00FF00"},
-      {name:"Blue", code:"#0000FF"},
-      {name:"Indigo", code:"#4B0082"},
-      {name:"Violet", code:"#8F00FF"}
+      {name: "Default Dark", color: "#222"},
+      {name: "Red", color: "red"},
+      {name: "Orange", color: "orange"},
+      {name: "Yellow", color: "yellow"},
+      {name: "Green", color: "green"},
+      {name: "Blue", color: "blue"},
+      {name: "Indigo", color: "indigo"},
+      {name: "Violet", color: "violet"}
     ];
 
-    function priceForIndex(i){ return i===0 ? 0 : 50 + (i-1)*50; }
+    // Cosmetic items (non-color)
+    const cosmetics = [
+      {name: "Golden Frame", type: "frame", value: "gold", price: 10000},
+      {name: "Diamond Frame", type: "frame", value: "aqua", price: 1000000}
+    ];
 
-    function updateDisplay(){
-      document.getElementById("balance").innerText=balance;
-      localStorage.setItem("balance",balance);
-      localStorage.setItem("ownedColors",JSON.stringify(ownedColors));
-      localStorage.setItem("bgColor",bgColor);
-      document.body.style.setProperty("--bg", bgColor);
-    }
+    // Load owned items
+    let owned = JSON.parse(localStorage.getItem("ownedItems")) || ["#222"]; // Default always owned
+    let currentColor = localStorage.getItem("bgColor") || "#222";
+    let currentFrame = localStorage.getItem("frameStyle") || "none";
 
-    function renderStore(){
-      const store = document.getElementById("store");
-      store.innerHTML="";
-      colors.forEach((c,i)=>{
-        const div=document.createElement("div");
-        div.className="color-option";
-        div.style.background=c.code;
-        let price=priceForIndex(i);
+    const storeDiv = document.getElementById("store");
 
-        if(!ownedColors.includes(c.code) && price===0) ownedColors.push(c.code);
+    // Add colors to store
+    colors.forEach((c, i) => {
+      let price = basePrice * Math.pow(10, i); // scale much faster
+      let div = document.createElement("div");
+      div.className = "item";
+      div.style.border = "2px solid " + c.color;
 
-        if(ownedColors.includes(c.code)){
-          let btn=document.createElement("button");
-          btn.innerText=(bgColor===c.code)?"Selected":"Select";
-          btn.onclick=()=>{ bgColor=c.code; updateDisplay(); renderStore(); };
-          div.appendChild(btn);
-        } else {
-          let btn=document.createElement("button");
-          btn.innerText="Buy $" + price;
-          btn.onclick=()=>{
-            if(balance>=price){
-              balance-=price;
-              ownedColors.push(c.code);
-              bgColor=c.code;
-              updateDisplay();
-              renderStore();
-            }
-          };
-          div.appendChild(btn);
-        }
-        store.appendChild(div);
-      });
-    }
+      let btn = document.createElement("button");
+      if (owned.includes(c.color)) {
+        btn.textContent = (c.color === currentColor ? "Selected" : "Select");
+        btn.onclick = () => {
+          localStorage.setItem("bgColor", c.color);
+          location.reload();
+        };
+      } else {
+        btn.textContent = "Buy $" + price.toLocaleString();
+        btn.onclick = () => {
+          if (balance >= price) {
+            balance -= price;
+            owned.push(c.color);
+            localStorage.setItem("balance", balance);
+            localStorage.setItem("ownedItems", JSON.stringify(owned));
+            localStorage.setItem("bgColor", c.color);
+            location.reload();
+          } else {
+            alert("Not enough money!");
+          }
+        };
+      }
 
-    function goBack(){ window.location.href="index.html"; }
+      div.innerHTML = `<h3>${c.name}</h3>`;
+      div.appendChild(btn);
+      storeDiv.appendChild(div);
+    });
 
-    updateDisplay();
-    renderStore();
+    // Add cosmetics to store
+    cosmetics.forEach(c => {
+      let div = document.createElement("div");
+      div.className = "item";
+      div.style.border = "2px dashed " + (c.type === "frame" ? c.value : "#fff");
+
+      let btn = document.createElement("button");
+      if (owned.includes(c.name)) {
+        btn.textContent = (c.value === currentFrame ? "Selected" : "Select");
+        btn.onclick = () => {
+          localStorage.setItem("frameStyle", c.value);
+          location.reload();
+        };
+      } else {
+        btn.textContent = "Buy $" + c.price.toLocaleString();
+        btn.onclick = () => {
+          if (balance >= c.price) {
+            balance -= c.price;
+            owned.push(c.name);
+            localStorage.setItem("balance", balance);
+            localStorage.setItem("ownedItems", JSON.stringify(owned));
+            localStorage.setItem("frameStyle", c.value);
+            location.reload();
+          } else {
+            alert("Not enough money!");
+          }
+        };
+      }
+
+      div.innerHTML = `<h3>${c.name}</h3>`;
+      div.appendChild(btn);
+      storeDiv.appendChild(div);
+    });
+
+    // Save balance display
+    document.getElementById("balance").textContent = "Balance: $" + balance.toFixed(2);
   </script>
 </body>
 </html>
